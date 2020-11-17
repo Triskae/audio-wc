@@ -1,4 +1,5 @@
 import '../../js/webaudio-controls.js'
+import keyboard from '../KeyboardJS-master/index.js'
 
 const template = document.createElement('template');
 
@@ -11,22 +12,19 @@ template.innerHTML = `
     }
 </style>
 <head>
-<link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<div style="display: flex; flex-direction: column">
-   <video crossorigin width="720" controls preload="auto" id="vid">
+<div style="display: flex; flex-direction: column; border-width:2px;
+ border-style: solid;
+ border-color:black;
+ padding: 5px" id="main">
+   <video crossorigin width="720" controls preload="auto" id="vid" style="width: 100%">
    </video>
    <div style="display:flex; flex-direction: row; justify-content: center">
       <span class="inline-flex rounded-md shadow-sm">
       <button type="button" id="play"
          class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline-indigo focus:border-indigo-700 active:bg-indigo-700">
-      Play
-      </button>
-      </span>
-      <span class="inline-flex rounded-md shadow-sm">
-      <button type="button" id="pause"
-         class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline-indigo focus:border-indigo-700 active:bg-indigo-700">
-      Pause
+      Play / Pause
       </button>
       </span>
       <span class="inline-flex rounded-md shadow-sm">
@@ -88,12 +86,14 @@ template.innerHTML = `
 <output id="gain5">0 dB</output>
   </div>
 </div>
+
+<canvas id="eq-canvas"></canvas>
 </div>`;
 
 export default class MyPlayer extends HTMLElement {
 
     static get observedAttributes() {
-        return ["src", "controls", "loop", "show-panner"];
+        return ["src", "controls", "loop", "show-panner", "show-eq", "show-visualisation"];
     }
 
     constructor() {
@@ -104,19 +104,25 @@ export default class MyPlayer extends HTMLElement {
         this.src = this.getAttribute('src') || false;
         this.controls = this.getAttribute("controls") || false;
         this.showPanner = this.getAttribute("show-panner") || false;
+        this.showEq = this.getAttribute("show-eq") || false;
+        this.showVis = this.getAttribute("show-visualisation") || false;
         this.loop = this.getAttribute("loop") || false;
 
         this.basePath = this.getBaseURL();
         this.fixRelativeImagePaths();
         this.freqs = [];
+        this.canvas = this.shadowRoot.getElementById("eq-canvas");
+        this.playSwitch = true;
     }
 
 
     connectedCallback() {
         if (!this.showPanner) {
-            this.shadowRoot.getElementById("panning-div").style.visibility = "hidden";
-
+            this.shadowRoot.getElementById("panning-div").style.display = "none";
         }
+
+        if(!this.showEq) this.shadowRoot.getElementById("eq-div").style.display = "none";
+        if (!this.showVis)this.shadowRoot.getElementById("eq-canvas").style.display = "none";
 
         this.video = this.shadowRoot.getElementById("vid");
         this.video.volume = 0;
@@ -124,12 +130,8 @@ export default class MyPlayer extends HTMLElement {
 
         this.play = this.shadowRoot.getElementById("play");
         this.play.onclick = (event) => {
-            this.video.play()
-        };
+            this.playFunc();
 
-        this.pause = this.shadowRoot.getElementById("pause");
-        this.pause.onclick = (event) => {
-            this.video.pause()
         };
 
         this.stop = this.shadowRoot.getElementById("stop");
@@ -208,10 +210,81 @@ export default class MyPlayer extends HTMLElement {
         this.eq3500.oninput = (event) => this.changeGain(event.target.value, 4);
         this.eq10000.oninput = (event) => this.changeGain(event.target.value, 5);
         this.video.src = this.src;
+
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        this.canvasContext = this.canvas.getContext("2d");
+        this.animateEq()
+
+        keyboard.bind('right', (e) => {
+            this.video.currentTime += 10;
+        });
+
+        keyboard.bind('left', (e) => {
+            this.video.currentTime -= 10;
+        });
+        keyboard.bind('space', (e) => {
+            this.playFunc();
+        });
+        keyboard.bind('up', (e) => {
+            if (this.video.volume <= 0.90) {
+                this.video.volume += 0.10;
+                this.knob.value += 0.10;
+            }
+        });
+        keyboard.bind('down', (e) => {
+            if (this.video.volume >= 0.10) {
+                this.video.volume -= 0.10;
+                this.knob.value -= 0.10;
+            }
+        });
+    }
+
+    playFunc() {
+        if (this.playSwitch) {
+            this.video.play()
+            this.playSwitch = false;
+        } else {
+            this.video.pause()
+            this.playSwitch = true;
+        }
     }
 
     disconnectedCallback() {
 
+    }
+
+    animateEq() {
+        this.canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
+        this.canvasContext.fillRect(0, 0, this.width, this.height);
+
+        this.analyserNode.getByteTimeDomainData(this.dataArray);
+
+        this.canvasContext.lineWidth = 1;
+        this.canvasContext.strokeStyle = "#FF0000";
+
+        this.canvasContext.beginPath();
+        let sliceWidth = this.width / this.bufferLenght;
+        let x = 0;
+
+        for (let i = 0; i < this.bufferLenght; i++) {
+            let v = this.dataArray[i] / 255;
+            let y = v * this.height;
+
+            if (i === 0) {
+                this.canvasContext.moveTo(x, y);
+            } else {
+                this.canvasContext.lineTo(x, y);
+            }
+
+            x += sliceWidth * 2;
+        }
+
+        this.canvasContext.lineTo(this.width, this.height);
+        this.canvasContext.stroke();
+        requestAnimationFrame(() => {
+            this.animateEq();
+        });
     }
 
     getBaseURL() {
