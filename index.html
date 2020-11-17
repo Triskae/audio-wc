@@ -18,29 +18,18 @@
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/main.css">
 
+    <script src="js/vendor/modernizr-3.11.2.min.js"></script>
+
+    <script src="./components/myPlayer/index.js" type="module"></script>
+
     <meta name="theme-color" content="#fafafa">
 </head>
 
-<body>
-
-<script src="js/vendor/modernizr-3.11.2.min.js"></script>
-<script src="./js/webaudio-controls.js"></script>
-<link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+<body style="max-width: 50rem; margin: 0 auto;">
 
 
-
-<script>
-    let video = document.getElementById("vid");
-    video.volume = 0;
-
-    let knobVolume = document.getElementById("knob-volume");
-    console.log(video);
-
-    knobVolume.addEventListener("input", (event)=>{
-      video.volume = event.target.value;
-    });
-
-</script>
+<video-player src="./videos/big_buck_bunny_640_512kb.mp4" controls="true" show-panner="true"></video-player>
+<video-player src="./videos/big_buck_bunny_640_512kb.mp4"></video-player>
 
 </body>
 
