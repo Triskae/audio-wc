@@ -3,6 +3,16 @@ import '../../js/webaudio-controls.js'
 const template = document.createElement('template');
 
 template.innerHTML = `
+<style>
+    .label {
+        display: inline-block;
+        width: 6rem;
+        text-align: right;
+    }
+</style>
+<head>
+<link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+</head>
 <div style="display: flex; flex-direction: column">
    <video crossorigin width="720" controls preload="auto" id="vid">
    </video>
@@ -41,40 +51,40 @@ template.innerHTML = `
          <webaudio-knob id="knob" min="0" max="1" step="0.10" src="../../../img/knob/LittlePhatty.png"></webaudio-knob>
       </span>
    </div>
-   <div style="width: 20%; align-self: center" id="panning-div">
-   <label>Balance</label>
+   <div style="align-self: center" id="panning-div">
+   <label class="label">Balance</label>
       <input id="panning" type="range" min="-1" max="1" step="0.1" value="0">
-      <span id="panningValue"></span>
+    <output id="panningValue">0</output>
    </div>
    <div style="align-self: center" id="eq-div">
    <div class="controls">
-    <label>60Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-60"/>
+    <label class="label">60Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-60" class="eq-input"/>
   <output id="gain0">0 dB</output>
   </div>
   <div class="controls">
-    <label>170Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-170"/>
+    <label class="label">170Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-170" class="eq-input"/>
 <output id="gain1">0 dB</output>
   </div>
   <div class="controls">
-    <label>350Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-350"/>
+    <label class="label">350Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-350" class="eq-input"/>
 <output id="gain2">0 dB</output>
   </div>
   <div class="controls">
-    <label>1000Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-1000"/>
+    <label class="label">1000Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-1000" class="eq-input"/>
 <output id="gain3">0 dB</output>
   </div>
   <div class="controls">
-    <label>3500Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-3500"/>
+    <label class="label">3500Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-3500" class="eq-input"/>
 <output id="gain4">0 dB</output>
   </div>
   <div class="controls">
-    <label>10000Hz</label>
-    <input type="range" value="0" step="1" min="-30" max="30" id="eq-10000"/>
+    <label class="label">10000Hz</label>
+    <input type="range" value="0" step="1" min="-30" max="30" id="eq-10000" class="eq-input"/>
 <output id="gain5">0 dB</output>
   </div>
 </div>
